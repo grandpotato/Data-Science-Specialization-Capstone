@@ -1,0 +1,50 @@
+---
+title: "week1-Getting and Cleaning the Data"
+author: "Kevin Ho"
+date: "9 December 2016"
+output: html_document
+---
+
+```{r knitr setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+
+```
+
+```{r setvariables}
+dataLoc <- "C:/Users/kxho/Documents/R-Dev/Capstone/data"
+```
+
+```{r loadpackages}
+require(stringr)
+```
+
+
+```{r loaddata}
+twitter <- readLines(paste(file=dataLoc,"/en_US.twitter.txt",sep=""),10)
+blogs <- readLines(paste(file=dataLoc,"/en_US.blogs.txt",sep=""),10)
+news  <- readLines(paste(file=dataLoc,"/en_US.news.txt",sep=""),10)
+```
+
+```{r tokenize}
+
+tokenized <- str_split(twitter," ")
+```
+
+
+#System Info
+##Version
+```{r sysinfo}
+R.version
+
+Sys.info()
+```
+
+##Installed Packages
+```{r installedpackages, echo = false}
+ip <- as.data.frame(installed.packages()[,c(1,3:4)])
+rownames(ip) <- NULL
+ip <- ip[is.na(ip$Priority),1:2,drop=FALSE]
+print(ip, row.names=FALSE)
+```
