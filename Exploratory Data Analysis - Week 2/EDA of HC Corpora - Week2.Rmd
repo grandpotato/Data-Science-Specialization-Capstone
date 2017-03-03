@@ -10,11 +10,50 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(dplyr)
 library(stringr)
+library(tm)
+library(tau)
+library(RWeka)
 source("Text Mining.R")
 ```
 
+The first step is to make a corpus for our use. Rather than process the entire corpus we can randomly sample the data to get a fairly accurate representation. This requires a sample files to be generated
 
-```{r makeDoc}
+```{r sample function, eval=FALSE}
+create.sampled.file <- function(inputFile, outputFile, fraction = 0.005) {
+    #This function randomly samples lines from an inputFile and then exports it into an outputFile
+    
+    conn <- file(inputFile, "r")
+    fileContents <- readLines(conn)
+    nlines <- length(fileContents)
+    close(conn)
+    
+    conn <- file(outputFile, "w")
+    selection <- rbinom(nlines, 1, fraction)
+    for(i in  1: nlines) {
+        if (selection[i]==1) {cat(fileContents[i], file=conn, sep = "\n")}
+    }
+    close(conn)
+    
+    paste("Saved", sum(selection), "lines to file.", outputFile)
+}
+```
+
+One percent of the original corpus was taken as a sample
+
+```{r sampling,eval=FALSE}
+percentOfCorpus <- 0.005
+
+create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.news.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/en_US.news_Sampled.txt", fraction = percentOfCorpus)
+
+create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.blogs.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/en_US.blogs_Sampled.txt", fraction = percentOfCorpus)
+
+create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.twitter.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/en_US.twitter_Sampled.txt", fraction = percentOfCorpus)
+
+```
+
+
+A corpus of all our data is compiled for us to do some analysis.
+```{r makeDoc, warning=FALSE}
 docs <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled")
 ```
 
@@ -23,12 +62,12 @@ docs <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specializa
 
 create#STAGING
 
-```{r staging}
-tdm <- TermDocumentMatrix(docs)   
+```{r staging, cache=TRUE}
+dtm <- DocumentTermMatrix(docs)   
 ```
 
 Lets have a look at the most frequent 20 terms of the combined dataset
-```{r analysis}
+```{r analysis, cache=TRUE}
 dtm.freq <- tbl_df(data.frame(Words = dtm$dimnames$Terms, Frequency = colSums(as.matrix(dtm))))
 
 dtm.freq.top <- dtm.freq %>%
@@ -41,24 +80,30 @@ dtm.freq.top$Words <- factor(dtm.freq.top$Words, levels = dtm.freq.top$Words[ord
 ggplot(dtm.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Top 20 Words in Combined Corpus")
 
 ```
-unique terms
-length(freq)
-ord <- order(freq)   
-show common words
 
 
-Repeat for n-grams
+There are `r nrow(dtm.freq)` unique terms in the Corpus and a total of `r as.character(sum(dtm.freq$Frequency))` words.
+
+## Making the N-gram Corpus
+
+The aim of this project is to make an application that can take a phrase and predict the next most likely word. For example google search suggestions has a completion function. So when I type in "I want a" google offers the following suggestions
+
+
+![Google Search: "I want a"](Google Suggestions.png)
+
+This is the functionality we'd like to replicate.
+
+
+Lets start with making bi-grams.
+
+``` {r}
+    bigram.tdm <- TermDocumentMatrix(docs, control = list(tokenize = NGramTokenizer)
+```
 
 Most common phrases
 Length of common phrases
 
 
-
-#interesting stuff
-dtms <- removeSparseTerms(dtm, 0.25) # This makes a matrix that is 10% empty space, maximum.   
-
-
-}
 
 #questions
 Some words are more frequent than others - what are the distributions of word frequencies?
@@ -66,7 +111,8 @@ Some words are more frequent than others - what are the distributions of word fr
 What are the frequencies of 2-grams and 3-grams in the dataset?
 
 How many unique words do you need in a frequency sorted dictionary to cover 50% of all word instances in the language? 90%?
-Do an analysis I guess. % word count of the total
+Do an analysis I guess. % word count of the total 
+dtms <- removeSparseTerms(dtm, 0.25) # This makes a matrix that is 10% empty space, maximum.   
 
 How do you evaluate how many of the words come from foreign languages?
 foreign dictionary lookup? that's a lot of dictionaries

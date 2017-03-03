@@ -69,3 +69,10 @@ make.TMMap <- function(dataLoc) {
     #Return a plain text document
     tm_map(docs, PlainTextDocument)   
 }
+
+BigramTokenizer <- function(docs) {
+    library(RWeka)
+    #Figure out how this works tdm <- TermDocumentMatrix(docs, control=list(tokenize = NGramTokenizer))
+    ngram_tokenizer(docs, Weka_control(min = 2, max = 2))
+}
+
