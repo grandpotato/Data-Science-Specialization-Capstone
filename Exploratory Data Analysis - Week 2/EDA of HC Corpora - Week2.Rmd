@@ -1,0 +1,76 @@
+---
+title: "EDA of Processed HC Corpora"
+author: "KevinHo"
+date: "23 February 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(stringr)
+source("Text Mining.R")
+```
+
+
+```{r makeDoc}
+docs <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled")
+```
+
+#EXPLORING DATA
+
+
+create#STAGING
+
+```{r staging}
+tdm <- TermDocumentMatrix(docs)   
+```
+
+Lets have a look at the most frequent 20 terms of the combined dataset
+```{r analysis}
+dtm.freq <- tbl_df(data.frame(Words = dtm$dimnames$Terms, Frequency = colSums(as.matrix(dtm))))
+
+dtm.freq.top <- dtm.freq %>%
+                top_n(20)
+
+#Fun bit of code so that ggplot will display the words ordered by their value
+dtm.freq.top$Words <- factor(dtm.freq.top$Words, levels = dtm.freq.top$Words)
+dtm.freq.top$Words <- factor(dtm.freq.top$Words, levels = dtm.freq.top$Words[order(dtm.freq.top$Frequency)])
+
+ggplot(dtm.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Top 20 Words in Combined Corpus")
+
+```
+unique terms
+length(freq)
+ord <- order(freq)   
+show common words
+
+
+Repeat for n-grams
+
+Most common phrases
+Length of common phrases
+
+
+
+#interesting stuff
+dtms <- removeSparseTerms(dtm, 0.25) # This makes a matrix that is 10% empty space, maximum.   
+
+
+}
+
+#questions
+Some words are more frequent than others - what are the distributions of word frequencies?
+
+What are the frequencies of 2-grams and 3-grams in the dataset?
+
+How many unique words do you need in a frequency sorted dictionary to cover 50% of all word instances in the language? 90%?
+Do an analysis I guess. % word count of the total
+
+How do you evaluate how many of the words come from foreign languages?
+foreign dictionary lookup? that's a lot of dictionaries
+
+Can you think of a way to increase the coverage -- identifying words that may not be in the corpora or using a smaller number of words in the dictionary to cover the same number of phrases?
+
+I ould remove prefixing and suffixing...but that could end up with weird results... I'm also not sure how to implement that so that grammer would still work

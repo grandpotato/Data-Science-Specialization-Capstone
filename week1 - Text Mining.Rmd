@@ -11,32 +11,28 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r loadpackages}
- Needed <- c("tm", "SnowballCC", "RColorBrewer", "ggplot2", "wordcloud", "biclust", "cluster", "igraph", "fpc")   
- install.packages(Needed, dependencies=TRUE)   
- install.packages("Rcampdf", repos = "http://datacube.wu.ac.at/", type = "source")    
+ #Needed <- c("tm", "SnowballCC", "RColorBrewer", "ggplot2", "wordcloud", "biclust", "cluster", "igraph", "fpc")   
+ #install.packages(Needed, dependencies=TRUE)   
+ #install.packages("Rcampdf", repos = "http://datacube.wu.ac.at/", type = "source")    
 ```
 
 ```{r setvariables}
-dataLoc <- "C:/Users/kxho/Documents/R-Dev/Capstone/data"
+dataLoc <- "../Temp/Data-Science-Specialization-Capstone-Data/Sampled/"
 cname <- file.path(dataLoc)   
 ```
 
 
 ```{r loaddata}
 library(tm)   
+
 docs <- Corpus(DirSource(cname))   
 
-
-#Take a sample so models can be built quicker
-#set.seed(214)
-#docs <- sample(docs,1)
-
-profanity <- readLines("C:/Users/kxho/Documents/R-Dev/Capstone/reference/profanity.txt")
+profanity <- readLines("C:/Users/Kevin/Documents/GitHub/Temp/profanity.txt")
 #Confirm all files are available
 summary(docs)   
 ```
 
-```{r preprocessing, cache = TRUE}
+```{r preprocessing}
 #I'm not here to predict punctuation. Although it is possible.
 docs <- tm_map(docs, removePunctuation) 
 
@@ -103,9 +99,35 @@ Sys.info()
 ```
 
 ##Installed Packages
-```{r installedpackages, echo = false}
+```{r installedpackages, echo = FALSE}
 ip <- as.data.frame(installed.packages()[,c(1,3:4)])
 rownames(ip) <- NULL
 ip <- ip[is.na(ip$Priority),1:2,drop=FALSE]
 print(ip, row.names=FALSE)
+```
+
+# Appendix
+## Sampling from files
+```{r sampling, eval= FALSE}
+
+set.seed(13837)
+
+create.sampled.file <- function(inputFile, outputFile, fraction = 0.1) {
+    conn <- file(inputFile, "r")
+    fileContents <- readLines(conn)
+    nlines <- length(fileContents)
+    close(conn)
+    
+    conn <- file(outputFile, "w")
+    selection <- rbinom(nlines, 1, fraction)
+    for(i in  1: nlines) {
+        if (selection[i]==1) {cat(fileContents[i], file=conn, sep = "\n")}
+    }
+    close(conn)
+    
+    paste("Saved", sum(selection), "lines to file.", outputFile)
+}
+
+#create.sampled.file("../Temp/Data-Science-Specialization-Capstone-Data/en_US.news.txt","../Temp/Data-Science-Specialization-Capstone-Data/Sampled/en_US.news_Sampled.txt", fraction = 0.001)
+
 ```
