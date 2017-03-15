@@ -1,0 +1,111 @@
+---
+title: "week1-Text Mining"
+author: "Kevin Ho"
+date: "9 December 2016"
+output: html_document
+---
+
+```{r knitr setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r loadpackages}
+ Needed <- c("tm", "SnowballCC", "RColorBrewer", "ggplot2", "wordcloud", "biclust", "cluster", "igraph", "fpc")   
+ install.packages(Needed, dependencies=TRUE)   
+ install.packages("Rcampdf", repos = "http://datacube.wu.ac.at/", type = "source")    
+```
+
+```{r setvariables}
+dataLoc <- "C:/Users/kxho/Documents/R-Dev/Capstone/data"
+cname <- file.path(dataLoc)   
+```
+
+
+```{r loaddata}
+library(tm)   
+docs <- Corpus(DirSource(cname))   
+
+
+#Take a sample so models can be built quicker
+#set.seed(214)
+#docs <- sample(docs,1)
+
+profanity <- readLines("C:/Users/kxho/Documents/R-Dev/Capstone/reference/profanity.txt")
+#Confirm all files are available
+summary(docs)   
+```
+
+```{r preprocessing, cache = TRUE}
+#I'm not here to predict punctuation. Although it is possible.
+docs <- tm_map(docs, removePunctuation) 
+
+#remove common characters in emails
+for(j in seq(docs))   
+   {   
+     docs[[j]] <- gsub("/", " ", docs[[j]])   
+     docs[[j]] <- gsub("@", " ", docs[[j]])   
+     docs[[j]] <- gsub("\\|", " ", docs[[j]])   
+}   
+
+#cuz w3'd h8 to be predictn 1337 5P34K which would just ruin things. Also it kinda forces language to drift slower. More inertia.
+docs <- tm_map(docs, removeNumbers)   
+
+#We don't want words to be separated just because they're capitalized. Although the 'US' (America) becoming 'us' is a problem
+docs <- tm_map(docs, tolower)   
+
+#Its true that this might work against me in text prediction. But ... meh I can take this out later. It'll be better for context analysis
+docs <- tm_map(docs, removeWords, stopwords("english")) 
+
+#remove swearing. 
+docs <- tm_map(docs, removeWords, profanity)   
+
+#stemming corpora
+docs <- tm_map(docs, stemDocument) 
+
+#remove whitespace
+docs <- tm_map(docs, stripWhitespace)  
+
+#Tell R this is a plain text document
+docs <- tm_map(docs, PlainTextDocument)   
+inspect(docs[1]) # You can check a document (in this case the first) to see if it worked.  
+```
+
+
+```{r staging}
+dtm <- DocumentTermMatrix(docs)   
+dtm
+
+tdm <- TermDocumentMatrix(docs)   
+tdm   
+
+```
+
+```{r exploringData}
+freq <- colSums(as.matrix(dtm))   
+length(freq)
+
+ord <- order(freq)   
+```
+
+```{r}
+#interesting stuff
+
+dtms <- removeSparseTerms(dtm, 0.25) # This makes a matrix that is 10% empty space, maximum.   
+inspect(dtms)
+```
+#System Info
+##Version
+```{r sysinfo}
+R.version
+
+Sys.info()
+```
+
+##Installed Packages
+```{r installedpackages, echo = false}
+ip <- as.data.frame(installed.packages()[,c(1,3:4)])
+rownames(ip) <- NULL
+ip <- ip[is.na(ip$Priority),1:2,drop=FALSE]
+print(ip, row.names=FALSE)
+```

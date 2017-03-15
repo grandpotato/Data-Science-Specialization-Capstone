@@ -1,0 +1,156 @@
+---
+title: "EDA of Processed HC Corpora"
+author: "KevinHo"
+date: "23 February 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(stringr)
+library(tm)
+library(RWeka)
+library(knitr)
+source("Text Mining.R")
+source("helpers.R")
+```
+
+The first step is to make a corpus for our use. Rather than process the entire corpus we can randomly sample the data to get a fairly accurate representation. This requires a sample files to be generated
+
+```{r sample function, eval=FALSE}
+create.sampled.file <- function(inputFile, outputFile, fraction = 0.005) {
+    #This function randomly samples lines from an inputFile and then exports it into an outputFile
+    
+    conn <- file(inputFile, "r")
+    fileContents <- readLines(conn)
+    nlines <- length(fileContents)
+    close(conn)
+    
+    conn <- file(outputFile, "w")
+    selection <- rbinom(nlines, 1, fraction)
+    for(i in  1: nlines) {
+        if (selection[i]==1) {cat(fileContents[i], file=conn, sep = "\n")}
+    }
+    close(conn)
+    
+    paste("Saved", sum(selection), "lines to file.", outputFile)
+}
+```
+
+One percent of the original corpus was taken as a sample
+
+```{r sampling,eval=FALSE}
+percentOfCorpus <- 0.05
+
+create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.news.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/news/en_US.news_Sampled.txt", fraction = percentOfCorpus)
+
+create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.blogs.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/blogs/en_US.blogs_Sampled.txt", fraction = percentOfCorpus)
+
+create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.twitter.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/twitter/en_US.twitter_Sampled.txt", fraction = percentOfCorpus)
+
+```
+
+
+Lets analyse each of the corpora individually to see if there are specific characteristics of each one
+```{r makeDoc, warning=FALSE}
+docs.twitter <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled/twitter")
+docs.blogs <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled/news")
+docs.news <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled/blogs")
+
+```
+
+#EXPLORING DATA
+
+
+create#STAGING
+
+```{r staging, cache=TRUE}
+dtm.twitter <- DocumentTermMatrix(docs.twitter)   
+dtm.news <- DocumentTermMatrix(docs.news)   
+dtm.blogs <- DocumentTermMatrix(docs.blogs)   
+```
+
+Lets have a look at the most frequent 20 terms of the combined dataset
+```{r analysis, cache=TRUE}
+dtm.twitter.freq <- tbl_df(data.frame(Words = dtm.twitter$dimnames$Terms, Frequency = colSums(as.matrix(dtm.twitter))))
+dtm.news.freq <- tbl_df(data.frame(Words = dtm.news$dimnames$Terms, Frequency = colSums(as.matrix(dtm.news))))
+dtm.blogs.freq <- tbl_df(data.frame(Words = dtm.blogs$dimnames$Terms, Frequency = colSums(as.matrix(dtm.blogs))))
+
+dtm.twitter.freq.top <- dtm.twitter.freq %>%
+                        top_n(20)
+
+dtm.news.freq.top <- dtm.news.freq %>%
+                top_n(20)
+
+dtm.blogs.freq.top <- dtm.blogs.freq %>%
+                top_n(20)
+
+#Fun bit of code so that ggplot will display the words ordered by their value
+dtm.twitter.freq.top$Words <- factor(dtm.twitter.freq.top$Words, levels = dtm.twitter.freq.top$Words)
+dtm.twitter.freq.top$Words <- factor(dtm.twitter.freq.top$Words, levels = dtm.twitter.freq.top$Words[order(dtm.twitter.freq.top$Frequency)])
+
+dtm.news.freq.top$Words <- factor(dtm.news.freq.top$Words, levels = dtm.news.freq.top$Words)
+dtm.news.freq.top$Words <- factor(dtm.news.freq.top$Words, levels = dtm.news.freq.top$Words[order(dtm.news.freq.top$Frequency)])
+
+dtm.blogs.freq.top$Words <- factor(dtm.blogs.freq.top$Words, levels = dtm.blogs.freq.top$Words)
+dtm.blogs.freq.top$Words <- factor(dtm.blogs.freq.top$Words, levels = dtm.blogs.freq.top$Words[order(dtm.blogs.freq.top$Frequency)])
+
+g1 <- ggplot(dtm.twitter.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Top 20 Words in Twitter Corpus")
+g2 <- ggplot(dtm.blogs.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Top 20 Words in Blogs Corpus")
+g3 <- ggplot(dtm.news.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Top 20 Words in News Corpus")
+
+multiplot(g1,g2,g3, cols=3)
+```
+
+```{r}
+uniqueWords <- data.frame("Source" = c("Twitter","Blogs","News"),
+                          "Number of Words"= c(sum(dtm.twitter.freq$Frequency),sum(dtm.blogs.freq$Frequency),sum(dtm.news.freq$Frequency)),
+                          "Unique Words"= c(nrow(dtm.twitter.freq),nrow(dtm.blogs.freq),nrow(dtm.news.freq)))
+
+g1 <- ggplot(uniqueWords,aes(Source,Number.of.Words)) + geom_bar(stat = "Identity")
+g2 <- ggplot(uniqueWords,aes(Source,Unique.Words)) + geom_bar(stat = "Identity")
+
+multiplot(g1,g2, cols = 2)
+
+```
+
+
+
+## Making the N-gram Corpus
+
+The aim of this project is to make an application that can take a phrase and predict the next most likely word. For example google search suggestions has a completion function. So when I type in "I want a" google offers the following suggestions
+
+
+![Google Search: "I want a"](Google Suggestions.png)
+
+This is the functionality we'd like to replicate.
+
+
+Lets start with making bi-grams.
+
+``` {r}
+    bigram.tdm <- TermDocumentMatrix(docs, control = list(tokenize = NGramTokenizer)
+```
+
+Most common phrases
+Length of common phrases
+
+
+
+#questions
+Some words are more frequent than others - what are the distributions of word frequencies?
+
+What are the frequencies of 2-grams and 3-grams in the dataset?
+
+How many unique words do you need in a frequency sorted dictionary to cover 50% of all word instances in the language? 90%?
+Do an analysis I guess. % word count of the total 
+dtms <- removeSparseTerms(dtm, 0.25) # This makes a matrix that is 10% empty space, maximum.   
+
+How do you evaluate how many of the words come from foreign languages?
+foreign dictionary lookup? that's a lot of dictionaries
+
+Can you think of a way to increase the coverage -- identifying words that may not be in the corpora or using a smaller number of words in the dictionary to cover the same number of phrases?
+
+I ould remove prefixing and suffixing...but that could end up with weird results... I'm also not sure how to implement that so that grammer would still work
