@@ -11,7 +11,7 @@ library(ggplot2)
 library(dplyr)
 library(stringr)
 library(tm)
-library(RWeka)
+library(ngram)
 library(knitr)
 source("Text Mining.R")
 source("helpers.R")
@@ -42,7 +42,7 @@ create.sampled.file <- function(inputFile, outputFile, fraction = 0.005) {
 One percent of the original corpus was taken as a sample
 
 ```{r sampling,eval=FALSE}
-percentOfCorpus <- 0.05
+percentOfCorpus <- 0.005
 
 create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.news.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/news/en_US.news_Sampled.txt", fraction = percentOfCorpus)
 
@@ -56,8 +56,8 @@ create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.
 Lets analyse each of the corpora individually to see if there are specific characteristics of each one
 ```{r makeDoc, warning=FALSE}
 docs.twitter <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled/twitter")
-docs.blogs <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled/news")
-docs.news <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled/blogs")
+docs.blogs <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled/blogs")
+docs.news <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled/news")
 
 ```
 
@@ -131,7 +131,9 @@ This is the functionality we'd like to replicate.
 Lets start with making bi-grams.
 
 ``` {r}
-    bigram.tdm <- TermDocumentMatrix(docs, control = list(tokenize = NGramTokenizer)
+    #Using the ngram library
+    str.blogs <- concatenate(lapply(docs.blogs,"[",1))
+    bigram.blogs <- ngram(str.blogs)
 ```
 
 Most common phrases
