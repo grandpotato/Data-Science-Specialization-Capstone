@@ -33,7 +33,7 @@ make.TMMap <- function(dataLoc) {
     library(tm)   
     docs <- Corpus(DirSource(cname))   
     
-    profanity <- readLines("C:/Users/Kevin/Documents/GitHub/Temp/profanity.txt")
+    profanity <- readLines("C:/Users/Kevin/Documents/GitHub/Temp/profanity.txt", encoding = "UTF-8")
     #Confirm all files are available
     
     # PREPROCESSING

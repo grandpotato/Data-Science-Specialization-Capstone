@@ -10,7 +10,7 @@
 #
 # This function has been sourced from http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/ 15/03/17
 
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, title = NULL) {
     library(grid)
     
     # Make a list from the ... arguments and plotlist
@@ -33,15 +33,27 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     } else {
         # Set up the page
         grid.newpage()
-        pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+        
+        pushViewport(viewport(layout = grid.layout(nrow(layout) + 1, ncol(layout), heights = c(0.5, rep(5,nrow(layout))))))
+        
+        grid.text(title,vp = viewport(layout.pos.row = 1, layout.pos.col = seq(1:ncol(layout))),gp=gpar(fontsize=20))
         
         # Make each plot, in the correct location
         for (i in 1:numPlots) {
             # Get the i,j matrix positions of the regions that contain this subplot
             matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
             
-            print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+            print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row + 1,
                                             layout.pos.col = matchidx$col))
         }
     }
 }
+
+BigramTokenizer <-
+    function(x)
+        unlist(lapply(ngrams(words(x), 2), paste, collapse = " "), use.names = FALSE)
+
+TrigramTokenizer <-
+    function(x)
+        unlist(lapply(ngrams(words(x), 3), paste, collapse = " "), use.names = FALSE)
+

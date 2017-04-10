@@ -17,21 +17,25 @@ source("Text Mining.R")
 source("helpers.R")
 ```
 
+```{r staticvars, include = FALSE}
+samplePercentage = 0.005
+```
+
 The first step is to make a corpus for our use. Rather than process the entire corpus we can randomly sample the data to get a fairly accurate representation. This requires a sample files to be generated
 
 ```{r sample function, eval=FALSE}
-create.sampled.file <- function(inputFile, outputFile, fraction = 0.005) {
+create.sampled.file <- function(inputFile, outputFile, fraction = samplePercentage) {
     #This function randomly samples lines from an inputFile and then exports it into an outputFile
     
     conn <- file(inputFile, "r")
-    fileContents <- readLines(conn)
+    fileContents <- readLines(conn, encoding="UTF-16LE", skipNul = TRUE)
     nlines <- length(fileContents)
     close(conn)
     
     conn <- file(outputFile, "w")
     selection <- rbinom(nlines, 1, fraction)
     for(i in  1: nlines) {
-        if (selection[i]==1) {cat(fileContents[i], file=conn, sep = "\n")}
+        if (selection[i]==1) {cat( stringi::stri_trans_general(fileContents[i], "latin-ascii"), file=conn, sep = "\n")}
     }
     close(conn)
     
@@ -39,19 +43,19 @@ create.sampled.file <- function(inputFile, outputFile, fraction = 0.005) {
 }
 ```
 
-One percent of the original corpus was taken as a sample
+`r samplePercentage*100`% of the original corpus will be taken as a sample
 
-```{r sampling,eval=FALSE}
-percentOfCorpus <- 0.005
+```{r sampling,eval=FALSE, warning=FALSE}
 
-create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.news.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/news/en_US.news_Sampled.txt", fraction = percentOfCorpus)
+create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.news.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/news/en_US.news_Sampled.txt", fraction = samplePercentage)
 
-create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.blogs.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/blogs/en_US.blogs_Sampled.txt", fraction = percentOfCorpus)
+create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.blogs.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/blogs/en_US.blogs_Sampled.txt", fraction = samplePercentage)
 
-create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.twitter.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/twitter/en_US.twitter_Sampled.txt", fraction = percentOfCorpus)
+create.sampled.file("../../Temp/Data-Science-Specialization-Capstone-Data/en_US.twitter.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/twitter/en_US.twitter_Sampled.txt", fraction = samplePercentage)
 
 ```
 
+#EXPLORING DATA
 
 Lets analyse each of the corpora individually to see if there are specific characteristics of each one
 ```{r makeDoc, warning=FALSE}
@@ -61,10 +65,7 @@ docs.news <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Speci
 
 ```
 
-#EXPLORING DATA
-
-
-create#STAGING
+#First we create Document Term Matricies for easier analysis
 
 ```{r staging, cache=TRUE}
 dtm.twitter <- DocumentTermMatrix(docs.twitter)   
@@ -72,7 +73,7 @@ dtm.news <- DocumentTermMatrix(docs.news)
 dtm.blogs <- DocumentTermMatrix(docs.blogs)   
 ```
 
-Lets have a look at the most frequent 20 terms of the combined dataset
+Lets have a look at the most frequent 20 terms of each dataset
 ```{r analysis, cache=TRUE}
 dtm.twitter.freq <- tbl_df(data.frame(Words = dtm.twitter$dimnames$Terms, Frequency = colSums(as.matrix(dtm.twitter))))
 dtm.news.freq <- tbl_df(data.frame(Words = dtm.news$dimnames$Terms, Frequency = colSums(as.matrix(dtm.news))))
@@ -97,12 +98,105 @@ dtm.news.freq.top$Words <- factor(dtm.news.freq.top$Words, levels = dtm.news.fre
 dtm.blogs.freq.top$Words <- factor(dtm.blogs.freq.top$Words, levels = dtm.blogs.freq.top$Words)
 dtm.blogs.freq.top$Words <- factor(dtm.blogs.freq.top$Words, levels = dtm.blogs.freq.top$Words[order(dtm.blogs.freq.top$Frequency)])
 
-g1 <- ggplot(dtm.twitter.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Top 20 Words in Twitter Corpus")
-g2 <- ggplot(dtm.blogs.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Top 20 Words in Blogs Corpus")
-g3 <- ggplot(dtm.news.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Top 20 Words in News Corpus")
+g1 <- ggplot(dtm.twitter.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Twitter")
+g2 <- ggplot(dtm.blogs.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "Blogs")
+g3 <- ggplot(dtm.news.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "News")
 
-multiplot(g1,g2,g3, cols=3)
+multiplot(g1,g2,g3, cols=3, title = "Top 20 Words")
 ```
+
+It can be seen from the sample that the twitter and blogs data will dominate the news data in any predictive counts.
+
+```{r}
+uniqueWords <- data.frame("Source" = c("Twitter","Blogs","News"),
+                          "Number of Words"= c(sum(dtm.twitter.freq$Frequency),sum(dtm.blogs.freq$Frequency),sum(dtm.news.freq$Frequency)),
+                          "Unique Words"= c(nrow(dtm.twitter.freq),nrow(dtm.blogs.freq),nrow(dtm.news.freq)))
+
+g1 <- ggplot(uniqueWords,aes(Source,Number.of.Words)) + geom_bar(stat = "Identity")
+g2 <- ggplot(uniqueWords,aes(Source,Unique.Words)) + geom_bar(stat = "Identity")
+
+multiplot(g1,g2, cols = 2)
+
+```
+
+From the unique words listing. It can be seen that blogs are less likely to have a variety of language.
+
+## Making the N-gram Corpus
+
+The aim of this project is to make an application that can take a phrase and predict the next most likely word. For example google search suggestions has a completion function. So when I type in "I want a" google offers the following suggestions
+
+
+![Google Search: "I want a"](Google Suggestions.png)
+
+This is the functionality we'd like to replicate.
+
+
+Lets start with making a combined data source
+
+```{r}
+file.copy("../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/news/en_US.news_Sampled.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/en_US.news_Sampled.txt")
+file.copy("../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/blogs/en_US.blogs_Sampled.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/en_US.blogs_Sampled.txt")
+file.copy("../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/twitter/en_US.twitter_Sampled.txt","../../Temp/Data-Science-Specialization-Capstone-Data/Sampled/en_US.twitter_Sampled.txt")
+
+docs <- make.TMMap("C:/Users/Kevin/Documents/GitHub/Temp/Data-Science-Specialization-Capstone-Data/Sampled/")
+```
+
+
+And lets convert these documents into monograms, bigrams and trigrams.
+
+
+```{r}
+dtm.mono <- DocumentTermMatrix(docs)
+dtm.bigram <- DocumentTermMatrix(docs, control = list(tokenize = BigramTokenizer))
+dtm.trigram <- DocumentTermMatrix(docs, control = list(tokenize = TrigramTokenizer))
+```
+
+Lets have a look at the most frequent 20 terms of each dataset
+```{r analysis, cache=TRUE}
+dtm.mono.freq <- tbl_df(data.frame(Words = dtm.mono$dimnames$Terms, Frequency = colSums(as.matrix(dtm.mono)))) %>% 
+    arrange(desc(Frequency)) %>% 
+    mutate(cumsum = cumsum(Frequency)) %>%
+    mutate(coverage = cumsum/sum(Frequency))
+
+dtm.bigram.freq <- tbl_df(data.frame(Words = dtm.bigram$dimnames$Terms, Frequency = colSums(as.matrix(dtm.bigram)))) %>%                
+    arrange(desc(Frequency)) %>% 
+    mutate(cumsum = cumsum(Frequency)) %>%
+    mutate(coverage = cumsum/sum(Frequency))
+
+dtm.trigram.freq <- tbl_df(data.frame(Words = dtm.trigram$dimnames$Terms, Frequency = colSums(as.matrix(dtm.trigram)))) %>% 
+    arrange(desc(Frequency)) %>% 
+    mutate(cumsum = cumsum(Frequency)) %>%
+    mutate(coverage = cumsum/sum(Frequency))
+
+dtm.mono.freq.top <- dtm.mono.freq %>%
+                        arrange(desc(Frequency)) %>%
+                        top_n(20)
+
+dtm.bigram.freq.top <- dtm.bigram.freq %>%
+                top_n(20)
+
+dtm.trigram.freq.top <- dtm.trigram.freq %>%
+                top_n(20)
+
+#Fun bit of code so that ggplot will display the words ordered by their value
+dtm.mono.freq.top$Words <- factor(dtm.mono.freq.top$Words, levels = dtm.mono.freq.top$Words)
+dtm.mono.freq.top$Words <- factor(dtm.mono.freq.top$Words, levels = dtm.mono.freq.top$Words[order(dtm.mono.freq.top$Frequency)])
+
+dtm.bigram.freq.top$Words <- factor(dtm.bigram.freq.top$Words, levels = dtm.bigram.freq.top$Words)
+dtm.bigram.freq.top$Words <- factor(dtm.bigram.freq.top$Words, levels = dtm.bigram.freq.top$Words[order(dtm.bigram.freq.top$Frequency)])
+
+dtm.trigram.freq.top$Words <- factor(dtm.trigram.freq.top$Words, levels = dtm.trigram.freq.top$Words)
+dtm.trigram.freq.top$Words <- factor(dtm.trigram.freq.top$Words, levels = dtm.trigram.freq.top$Words[order(dtm.trigram.freq.top$Frequency)])
+
+g1 <- ggplot(dtm.mono.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "mono")
+g2 <- ggplot(dtm.bigram.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "bigram")
+g3 <- ggplot(dtm.trigram.freq.top, aes(Words,Frequency)) + geom_bar(stat = "Identity") + coord_flip() + labs(title = "trigram")
+
+
+multiplot(g1,g2,g3, cols=3, title = "Top 20 Words")
+```
+
+It can be seen from the sample that as the length of the terms grow. Then there is less data to be made available for prediction.
 
 ```{r}
 uniqueWords <- data.frame("Source" = c("Twitter","Blogs","News"),
@@ -118,41 +212,39 @@ multiplot(g1,g2, cols = 2)
 
 
 
-## Making the N-gram Corpus
-
-The aim of this project is to make an application that can take a phrase and predict the next most likely word. For example google search suggestions has a completion function. So when I type in "I want a" google offers the following suggestions
-
-
-![Google Search: "I want a"](Google Suggestions.png)
-
-This is the functionality we'd like to replicate.
-
-
-Lets start with making bi-grams.
-
-``` {r}
-    #Using the ngram library
-    str.blogs <- concatenate(lapply(docs.blogs,"[",1))
-    bigram.blogs <- ngram(str.blogs)
-```
-
-Most common phrases
-Length of common phrases
-
-
-
 #questions
 Some words are more frequent than others - what are the distributions of word frequencies?
 
 What are the frequencies of 2-grams and 3-grams in the dataset?
 
 How many unique words do you need in a frequency sorted dictionary to cover 50% of all word instances in the language? 90%?
-Do an analysis I guess. % word count of the total 
-dtms <- removeSparseTerms(dtm, 0.25) # This makes a matrix that is 10% empty space, maximum.   
+```{r coverageanalysis}
+
+tbl_df(
+    data.frame(
+        Ngram = c(1,2,3), 
+        "Unique Words" = c(nrow(dtm.mono.freq), 
+                         nrow(dtm.bigram.freq),
+                         nrow(dtm.trigram.freq)
+                         ), 
+        "Fifty Percent Coverage" = c(nrow(dtm.mono.freq) - sum(dtm.mono.freq$coverage>.5),
+                         nrow(dtm.bigram.freq) - sum(dtm.bigram.freq$coverage>.5),
+                         nrow(dtm.trigram.freq) - sum(dtm.trigram.freq$coverage>.5)
+                         ),
+        "Ninety Percent Coverage" = c(nrow(dtm.mono.freq) - sum(dtm.mono.freq$coverage>.9),
+                        nrow(dtm.bigram.freq) - sum(dtm.bigram.freq$coverage>.9),
+                        nrow(dtm.trigram.freq) - sum(dtm.trigram.freq$coverage>.9)
+                        )
+                )
+    )
+
+```
 
 How do you evaluate how many of the words come from foreign languages?
 foreign dictionary lookup? that's a lot of dictionaries
+There's also the issues of typos. Are they foreign languages??
 
 Can you think of a way to increase the coverage -- identifying words that may not be in the corpora or using a smaller number of words in the dictionary to cover the same number of phrases?
+By converting words into root words (infinitives) Coverage could increase. There is additional complexity in interpreting tense. er, ing, s, ed, depending on the context of the sentence
 
 I ould remove prefixing and suffixing...but that could end up with weird results... I'm also not sure how to implement that so that grammer would still work
