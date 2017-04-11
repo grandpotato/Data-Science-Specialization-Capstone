@@ -1,4 +1,3 @@
-
 create.sampled.file <- function(inputFile, outputFile, fraction = 0.001) {
     #This function randomly samples lines from an inputFile and then exports it into an outputFile
     
@@ -20,7 +19,7 @@ create.sampled.file <- function(inputFile, outputFile, fraction = 0.001) {
 
 make.TMMap <- function(dataLoc) {
     #This R function takes a directory of documents and returns a plaintext document map of 1-grams with profanity and filtering. It 
-        
+    
     #LOAD PACKAGES
     #Needed <- c("tm", "SnowballCC", "RColorBrewer", "ggplot2", "wordcloud", "biclust", "cluster", "igraph", "fpc")   
     #install.packages(Needed, dependencies=TRUE)   
@@ -42,11 +41,11 @@ make.TMMap <- function(dataLoc) {
     
     #remove common characters in emails
     for(j in seq(docs))   
-        {   
-            docs[[j]] <- gsub("/", " ", docs[[j]])   
-            docs[[j]] <- gsub("@", " ", docs[[j]])   
-            docs[[j]] <- gsub("\\|", " ", docs[[j]])   
-        }   
+    {   
+        docs[[j]] <- gsub("/", " ", docs[[j]])   
+        docs[[j]] <- gsub("@", " ", docs[[j]])   
+        docs[[j]] <- gsub("\\|", " ", docs[[j]])   
+    }   
     
     #cuz w3'd h8 to be predictn 1337 5P34K which would just ruin things. Also it kinda forces language to drift slower. More inertia.
     docs <- tm_map(docs, removeNumbers)   
@@ -70,6 +69,7 @@ make.TMMap <- function(dataLoc) {
     tm_map(docs, PlainTextDocument)   
 }
 
+
 BigramTokenizer <-
     function(x)
         unlist(lapply(ngrams(words(x), 2), paste, collapse = " "), use.names = FALSE)
@@ -77,4 +77,3 @@ BigramTokenizer <-
 TrigramTokenizer <-
     function(x)
         unlist(lapply(ngrams(words(x), 3), paste, collapse = " "), use.names = FALSE)
-
