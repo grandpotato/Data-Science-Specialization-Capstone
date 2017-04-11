@@ -4,3 +4,5 @@ dplyr
 stringr
 NLP
 tm
+ngram
+knitr
