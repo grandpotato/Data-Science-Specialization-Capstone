@@ -18,7 +18,7 @@ source("helpers.R")
 ```
 
 ```{r static variables, echo = FALSE}
-samplePercentage = 0.1
+samplePercentage <- 0.001
 ```
 
 The first step is to make a corpus for our use. Rather than process the entire corpus we can randomly sample the data to get a fairly accurate representation. This requires a sample files to be generated
@@ -255,11 +255,12 @@ File Sampling Function
 ```
 
 Data sampling and cleaning functions
-```{r code=readLines(knitr::purl('~/GitHub/Data-Science-Specialization-Capstone/Exploratory Data Analysis - Week 2/Text Mining.R', documentation = 0)), eval = FALSE}
-
+	
+```{r comment='', warning=FALSE}
+cat(readLines('~/GitHub/Data-Science-Specialization-Capstone/Exploratory Data Analysis - Week 2/Text Mining.R'), sep = '\n')
 ```
 
 Other helper functions. Including multiplot
-```{r code=readLines(knitr::purl('~/GitHub/Data-Science-Specialization-Capstone/Exploratory Data Analysis - Week 2/helpers.R', documentation = 0)), eval = FALSE}
-
+```{r comment='',warning=FALSE}
+cat(readLines('~/GitHub/Data-Science-Specialization-Capstone/Exploratory Data Analysis - Week 2/helpers.R'), sep = '\n')
 ```

@@ -27,7 +27,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, title = NUL
         layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
                          ncol = cols, nrow = ceiling(numPlots/cols))
     }
-    
+      
     if (numPlots==1) {
         print(plots[[1]])
         
@@ -48,4 +48,27 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, title = NUL
                                             layout.pos.col = matchidx$col))
         }
     }
+}
+
+MakePredictMatrix <- function(docs.object,tokenizer.function) {
+    dtm.ngram <- DocumentTermMatrix(docs.object, control = list(tokenize = tokenizer.function))
+    
+    dtm.freq <- tbl_df(data.frame(Words = dtm.ngram$dimnames$Terms, Frequency = colSums(as.matrix(dtm.ngram)))) %>% 
+        arrange(Words, desc(Frequency)) %>% 
+        mutate(cumsum = cumsum(Frequency)) %>%
+        mutate(coverage = cumsum(Frequency)/sum(Frequency)) %>%
+        extract(Words,into = c("Input", "Predict"),'(.*)\\s+([^ ]+)$')
+#        group_by(Input, Predict) %>% 
+#        summarise(max(coverage))
+    return(dtm.freq)
+}
+
+
+CountWords <- function(phrase) {
+    phrase <- str_trim(phrase)
+    stri_count(phrase,regex = "\\W+") + 1
+}
+
+GetLastNWords <- function(phrase, numWords) {
+    stringr::word(phrase, -1 * numWords, -1)
 }
