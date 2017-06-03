@@ -32,7 +32,7 @@ MakeTMMap <- function(dataLoc) {
     library(tm)   
     docs <- VCorpus(DirSource(cname))   
     
-    profanity <- readLines("../data/reference/profanity.txt", encoding = "UTF-8")
+    profanity <- readLines("../../data/reference/profanity.txt", encoding = "UTF-8")
 
     #PROCESSING
     docs <- tm_map(docs, removePunctuation)
@@ -62,10 +62,19 @@ init_Predictive_Model_Env <- function(size, coverage = NULL)
 }
 
 
-predictNextWords <- function(listOfWords)
+predictNextWords <- function(list.of.words, predict.environment)
 {
   #Given an existing list of words (1 to n) this predict function calculates the 3 next most likely words based on an existing corpus.
   #I should really bundle the corpus into a class and run predict off of that
+  
+  #select correct ngram
+  next.words <- tbl_df(predict.environment) %>%
+            filter(Input == list.of.words) %>% 
+            arrange(desc(Frequency)) %>%
+            top_n(n = 3, wt = Frequency) %>%
+            select(Predict)
+                     
+  return(next.words)
 }
 
 
