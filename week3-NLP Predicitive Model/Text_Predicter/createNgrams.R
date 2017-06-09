@@ -6,42 +6,30 @@ library(stringr)
 library(RCurl)
 library(jsonlite)
 
+source("Text_Predicter/helpers.R")
+
 #Well this stuff should go within the MakePredictMatrix function
-data_location <- "../data/sampled/"
-export_location <- "Text_Predicter/"
-cleaned_corpus <- create_cleaned_corpus(data_location)
+# data_location <- "../data/"
+# export_location <- "Text_Predicter/"
+# cleaned_corpus <- create_cleaned_corpus(data_location, fraction = 0.1)
+# 
+# 
+# 
+# #This should be a class of a list of Matricies...I wouldn't really know how to do that....especially dynamic assignment of memory sizing or depth. questions for another time.
+# 
+# ngram <- create_ngram(cleaned_corpus, bigram_tokenizer)
+# export_ngram(ngram, export_location)
+# 
+# ngram <- create_ngram(cleaned_corpus, trigram_tokenizer)
+# export_ngram(ngram, export_location)
+# 
+# ngram <- create_ngram(cleaned_corpus, quadgram_tokenizer)
+# export_ngram(ngram, export_location)
 
-#This should be a class of a list of Matricies...I wouldn't really know how to do that....especially dynamic assignment of memory sizing or depth. questions for another time.
-num_ngrams <- 4
+#functions Below
 
-ngram <- create_ngram(cleaned_corpus, bigram_tokenizer)
-export_ngram(ngram, export_location)
 
-ngram <- create_ngram(cleaned_corpus, trigram_tokenizer)
-export_ngram(ngram, export_location)
-
-ngram <- create_ngram(cleaned_corpus, quadgram_tokenizer)
-export_ngram(ngram, export_location)
-
-CreateSampledFile <- function(input.file, output.file, fraction = 0.001) {
-  #This function randomly samples lines from an inputFile and then exports it into an outputFile
-  
-  conn <- file(input.file, "r")
-  file.contents <- readLines(conn)
-  nlines <- length(file.contents )
-  close(conn)
-  
-  conn <- file(output.file, "w")
-  selection <- rbinom(nlines, 1, fraction)
-  for(i in  1: nlines) {
-    if (selection[i]==1) {cat(file.contents [i], file=conn, sep = "\n")}
-  }
-  close(conn)
-  
-  paste("Saved", sum(selection), "lines to file.", output.file)
-}
-
-create_cleaned_corpus <- function(data_location) {
+create_cleaned_corpus <- function(data_location, fraction = 0.00001) {
   #This R function takes a directory of documents and returns a plaintext document map of 1-grams with profanity and filtering. It 
   
   #variables
@@ -52,7 +40,24 @@ create_cleaned_corpus <- function(data_location) {
   
   #Create corpus
   directory_source <- DirSource(data_location, encoding = "UTF-8")
-  clean_corpus <- VCorpus(directory_source)   
+  
+  
+  for (i in directory_source$filelist) {
+    conn <- file(i,"r")
+    filebuffer <- readLines(conn, encoding="UTF-8", skipNul=TRUE)
+    close(conn)
+    
+    set.seed(3413)
+    sampled_buffer <- sample(filebuffer, size = round(length(filebuffer) * fraction, digits = 0))
+    sample_corpus <- VCorpus(VectorSource(sampled_buffer))
+    if (!exists("clean_corpus")) {
+      clean_corpus <- sample_corpus
+    } else {
+      clean_corpus <- c(clean_corpus, sample_corpus, recursive = TRUE)  
+    }
+    
+  }
+  #clean_corpus <- VCorpus(directory_source)   
   
   #clean corpus
   clean_corpus <- tm_map(clean_corpus, removePunctuation)
