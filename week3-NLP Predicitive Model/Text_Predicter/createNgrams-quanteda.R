@@ -29,7 +29,7 @@ source("Text_Predicter/helpers.R")
 #functions Below
 
 
-create_cleaned_corpusQ <- function(data_location, fraction = 0.00001) {
+create_corpusQ <- function(data_location, fraction = 0.0001) {
   #This R function takes a directory of documents and returns a plaintext document map of 1-grams with profanity and filtering. It 
   
   #variables
@@ -39,11 +39,11 @@ create_cleaned_corpusQ <- function(data_location, fraction = 0.00001) {
   profanity_list <- head(profanity_list,-2)
   
   #Create corpus
-  directory_source <- DirSource(data_location, encoding = "UTF-8")
+  directory_source <- dir(data_location)
+  directory_source <- directory_source[grepl(".*.txt",directory_source)] # remove the non-text files
   
-  
-  for (i in directory_source$filelist) {
-    conn <- file(i,"r")
+  for (i in directory_source) {
+    conn <- file(paste(data_location, i, sep = ""),"r")
     filebuffer <- readLines(conn, encoding="UTF-8", skipNul = TRUE, warn = FALSE)
     close(conn)
     
@@ -58,17 +58,9 @@ create_cleaned_corpusQ <- function(data_location, fraction = 0.00001) {
     
   }
 
+
   
-  clean_corpus <- tokens(clean_corpus,
-                         remove_numbers = TRUE,
-                         remove_punct = TRUE,
-                         remove_symbols = TRUE,
-                         remove_separators = TRUE,
-                         remove_twitter = TRUE,
-                         remove_url = TRUE,
-                         ngrams = 4L
-                         )
-  
+  # removeFeatures()
   return(clean_corpus)
 }
 
@@ -81,10 +73,21 @@ quadgram_tokenizer <- function(x) unlist(lapply(ngrams(words(x), 4), paste, coll
 
 ngram_tokenizer <- function(x,n) unlist(lapply(ngrams(words(x), n), paste, collapse = " "), use.names = FALSE)
 
-create_ngram <- function(a_corpus,tokenizer_function) {
-  dtm <- DocumentTermMatrix(a_corpus, control = list(tokenize = tokenizer_function))
+create_ngram <- function(a_corpus, n_of_tokens) {
+  tokenized_corpus <- tokens(a_corpus,
+                         remove_numbers = TRUE,
+                         remove_punct = TRUE,
+                         remove_symbols = TRUE,
+                         remove_separators = TRUE,
+                         remove_twitter = TRUE,
+                         remove_url = TRUE,
+                         ngrams = n_of_tokens
+  )
+  dfm <- dfm(a_corpus, tolower = TRUE)
   
-  ngram <- tbl_df(data.frame(Words = dtm$dimnames$Terms, Frequency = colSums(as.matrix(dtm)))) %>% 
+  
+  
+  ngram <- tbl_df(data.frame(Words = dfm$dimnames$Terms, Frequency = colSums(as.matrix(dfm)))) %>% 
     arrange(Words, desc(Frequency)) %>% 
     mutate(Frequency = Frequency/sum(Frequency)) %>%
     extract(Words,into = c("Input", "Predict"), '(.*)\\s+([^ ]+)$')

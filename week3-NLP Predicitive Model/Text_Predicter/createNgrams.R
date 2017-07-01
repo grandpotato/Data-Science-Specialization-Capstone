@@ -7,24 +7,29 @@ library(RCurl)
 library(jsonlite)
 
 source("Text_Predicter/helpers.R")
+source("Text_Predicter/")
 
-#Well this stuff should go within the MakePredictMatrix function
-# data_location <- "../data/"
-# export_location <- "Text_Predicter/"
-# cleaned_corpus <- create_cleaned_corpus(data_location, fraction = 0.1)
-# 
-# 
-# 
-# #This should be a class of a list of Matricies...I wouldn't really know how to do that....especially dynamic assignment of memory sizing or depth. questions for another time.
-# 
-# ngram <- create_ngram(cleaned_corpus, bigram_tokenizer)
-# export_ngram(ngram, export_location)
-# 
-# ngram <- create_ngram(cleaned_corpus, trigram_tokenizer)
-# export_ngram(ngram, export_location)
-# 
-# ngram <- create_ngram(cleaned_corpus, quadgram_tokenizer)
-# export_ngram(ngram, export_location)
+main <- function() {
+  
+  #Well this stuff should go within the MakePredictMatrix function
+  data_location <- "../data/"
+  export_location <- "Text_Predicter/"
+  cleaned_corpus <- create_cleaned_corpus(data_location, fraction = 0.0001)
+  
+  
+  
+  #This should be a class of a list of Matricies...I wouldn't really know how to do that....especially dynamic assignment of memory sizing or depth. questions for another time.
+  
+  ngram <- create_ngram(cleaned_corpus, bigram_tokenizer)
+  export_ngram(ngram, export_location)
+  
+  ngram <- create_ngram(cleaned_corpus, trigram_tokenizer)
+  export_ngram(ngram, export_location)
+  
+  ngram <- create_ngram(cleaned_corpus, quadgram_tokenizer)
+  export_ngram(ngram, export_location)
+}
+  
 
 #functions Below
 
@@ -92,15 +97,29 @@ create_ngram <- function(a_corpus,tokenizer_function) {
   return(ngram)
 }
 
+#CSV implementation
 export_ngram <- function(ngram, destination) {
-  library("jsonlite")
-  
-  json <- toJSON(ngram, digits = NA)
-  validate(json)
-  
-  filename <- paste(destination, CountWords(head(ngram)$Input[1]) + 1,"-gram.json", sep ="")
-  
+
+
+  filename <- paste(destination, CountWords(head(ngram)$Input[1]) + 1,"-gram.csv", sep ="")
+
   #write to file
-  write(json, file = filename)
-  
+  write.csv(ngram, file = filename, row.names = FALSE)
+
 }
+
+#JSON implementation
+# export_ngram <- function(ngram, destination) {
+#   library("jsonlite")
+#   
+#   json <- toJSON(ngram, digits = NA)
+#   validate(json)
+#   
+#   filename <- paste(destination, CountWords(head(ngram)$Input[1]) + 1,"-gram.json", sep ="")
+#   
+#   #write to file
+#   write(json, file = filename)
+#   
+# }
+
+
