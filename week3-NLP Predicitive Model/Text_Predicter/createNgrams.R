@@ -14,7 +14,7 @@ main <- function() {
   #Well this stuff should go within the MakePredictMatrix function
   data_location <- "../data/"
   export_location <- "Text_Predicter/"
-  cleaned_corpus <- create_cleaned_corpus(data_location, fraction = 0.0001)
+  cleaned_corpus <- create_cleaned_corpus(data_location, fraction = 0.0005)
   
   
   

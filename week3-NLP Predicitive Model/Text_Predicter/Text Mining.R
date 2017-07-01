@@ -62,7 +62,7 @@ predictNextWords <- function(list.of.words, predict.environment)
       top_n(n = 3) 
   }
   
-  return(next.words)
+  return(list(next.words, list.of.words))
 }
 
 
