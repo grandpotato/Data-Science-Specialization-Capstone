@@ -1,0 +1,20 @@
+###This is now DEFUNCT
+
+```{r load-dependancies}
+source("helpers.R")
+source("Text Mining.R")
+library("dplyr")
+```
+
+```{r set variables}
+kDataLocation <- "../data/sampled/"
+```
+
+```{r}
+docs <- MakeTMMap(kDataLocation)
+```
+
+```{r}
+bigram.freq <- MakePredictMatrix(docs,BigramTokenizer)
+trigram.freq <-MakePredictMatrix(docs,TrigramTokenizer)
+```
