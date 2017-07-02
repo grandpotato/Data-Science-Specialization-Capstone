@@ -1,6 +1,0 @@
-
-1. Answer week 0's questions (quickly) Done
-2. Build a function that samples data from the source files (stage one)
-3. Build a tokenization function
-4. Build a simple cleaning function - spell check, lower case (don't worry about optimisation or performace)
-5. Build a filter against a profanity list
