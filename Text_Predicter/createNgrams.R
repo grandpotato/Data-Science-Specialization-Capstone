@@ -4,10 +4,6 @@ library(tidyr)
 library(stringi)
 library(stringr)
 library(RCurl)
-library(jsonlite)
-
-source("Text_Predicter/helpers.R")
-source("Text_Predicter/")
 
 main <- function() {
   
@@ -52,7 +48,9 @@ create_cleaned_corpus <- function(data_location, fraction = 0.00001) {
     filebuffer <- readLines(conn, encoding="UTF-8", skipNul=TRUE)
     close(conn)
     
-    set.seed(3413)
+
+    
+    
     sampled_buffer <- sample(filebuffer, size = round(length(filebuffer) * fraction, digits = 0))
     sample_corpus <- VCorpus(VectorSource(sampled_buffer))
     if (!exists("clean_corpus")) {
