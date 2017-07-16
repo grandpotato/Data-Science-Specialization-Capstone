@@ -1,123 +1,139 @@
-library(tm)
+library(quanteda)
+library(readtext)
 library(dplyr)
 library(tidyr)
 library(stringi)
 library(stringr)
 library(RCurl)
+source("helpers.R")
 
 main <- function() {
   
-  #Well this stuff should go within the MakePredictMatrix function
-  data_location <- "../data/"
-  export_location <- "Text_Predicter/"
-  cleaned_corpus <- create_cleaned_corpus(data_location, fraction = 0.0005)
+  start_time <- Sys.time()
   
+  print(paste0("Time started: ", start_time))
+  #Well this stuff should go within the MakePredictMatrix function
+  raw_data_location <- "../data/"
+  corpus_data_location <- "../data/samples/"
+  export_location <- "./"
+  
+  ngram_indexes <- seq(2,6,1)
+  
+  create_sample_files(raw_data_location, fraction = 0.1)
+  a_corpus <- create_corpus(corpus_data_location)
   
   
   #This should be a class of a list of Matricies...I wouldn't really know how to do that....especially dynamic assignment of memory sizing or depth. questions for another time.
   
-  ngram <- create_ngram(cleaned_corpus, bigram_tokenizer)
-  export_ngram(ngram, export_location)
+
+  for(i in ngram_indexes) {
+    ngram <- create_ngram(a_corpus, i)
+    export_ngram(ngram, export_location)
+  }
   
-  ngram <- create_ngram(cleaned_corpus, trigram_tokenizer)
-  export_ngram(ngram, export_location)
+  end_time <- Sys.time()
+  print(paste0("Time ended: ", end_time))
+  print(paste0("Total time: ", difftime(end_time, start_time)))
   
-  ngram <- create_ngram(cleaned_corpus, quadgram_tokenizer)
-  export_ngram(ngram, export_location)
 }
+
+
+create_sample_files <- function(data_location, fraction = 0.001) {
+
+  directory_source <- dir(data_location, ".*txt")
+  for (i in directory_source) {
+    full_path <- paste0(data_location, i)
+    filebuffer <- read.table(full_path, 
+                           header = FALSE, 
+                           sep = "\n",
+                           stringsAsFactors = FALSE, 
+                           encoding = "UTF-8",
+                           quote = "",
+                           skipNul = TRUE
+                           
+                           )
+    
+    set.seed(3413)
+    number_of_lines <- nrow(filebuffer)
+    sample_size <- round(number_of_lines * fraction)
+    filebuffer <- filebuffer[sample(number_of_lines, sample_size),]
+
+    sample_location <- paste0(data_location, "samples/sample_", i)
+    
+    conn <- file(sample_location, "w")
+    write.table(filebuffer, 
+              file = conn,
+              quote = FALSE,
+              sep = "\n",
+              row.names = FALSE,
+              col.names = FALSE,
+              fileEncoding = "UTF-8"
+              )
+    close(conn)
+  }
   
+}
 
-#functions Below
 
-
-create_cleaned_corpus <- function(data_location, fraction = 0.00001) {
-  #This R function takes a directory of documents and returns a plaintext document map of 1-grams with profanity and filtering. It 
+create_corpus <- function(data_location) {
+  require(readtext)
+  require(quanteda)
+  #This R function takes a directory of documents and returns a corpus
+    #Create corpus
+  directory_source <- paste(data_location, dir(data_location, ".*txt"), sep = "")
   
+  text_corpus <- corpus(readtext(directory_source, encoding = "latin1"))
+  
+  return(text_corpus)
+}
+
+create_ngram <- function(a_corpus, n_of_tokens) {
+  require(quanteda)
   #variables
   profanity_location <- "https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/en"
   raw_profanity_list <- getURL(profanity_location)
   profanity_list <- stri_split(raw_profanity_list, regex = "\\n")[[1]]
   profanity_list <- head(profanity_list,-2)
   
-  #Create corpus
-  directory_source <- DirSource(data_location, encoding = "UTF-8")
+  #write tokens to file
+  tokenized_corpus <- tokens(a_corpus,
+                         remove_numbers = TRUE,
+                         remove_punct = TRUE,
+                         remove_symbols = TRUE,
+                         remove_separators = TRUE,
+                         remove_twitter = TRUE,
+                         remove_url = TRUE,
+                         ngrams = n_of_tokens,
+                         concatenator = "_"
+  )
+  
+
+  tokenized_corpus <- removeFeatures(tokenized_corpus, profanity_list)
   
   
-  for (i in directory_source$filelist) {
-    conn <- file(i,"r")
-    filebuffer <- readLines(conn, encoding="UTF-8", skipNul=TRUE)
-    close(conn)
-    
-
-    
-    
-    sampled_buffer <- sample(filebuffer, size = round(length(filebuffer) * fraction, digits = 0))
-    sample_corpus <- VCorpus(VectorSource(sampled_buffer))
-    if (!exists("clean_corpus")) {
-      clean_corpus <- sample_corpus
-    } else {
-      clean_corpus <- c(clean_corpus, sample_corpus, recursive = TRUE)  
-    }
-    
-  }
-  #clean_corpus <- VCorpus(directory_source)   
+  #write dfm to file
+  dfm_corpus <- dfm(tokenized_corpus, tolower = TRUE)
+  #dfm <- dfm_trim(dfm, min_count = 4)
   
-  #clean corpus
-  clean_corpus <- tm_map(clean_corpus, removePunctuation)
-  clean_corpus <- tm_map(clean_corpus, content_transformer(function(x) iconv(x, to="ASCII", sub=" ")))
-  clean_corpus <- tm_map(clean_corpus, removeNumbers)   
-  clean_corpus <- tm_map(clean_corpus, content_transformer(tolower))   
-  clean_corpus <- tm_map(clean_corpus, removeWords, profanity_list)   
-  clean_corpus <- tm_map(clean_corpus, stripWhitespace)  
   
-  #stemming corpora
-  clean_corpus <- tm_map(clean_corpus, stemDocument) 
-  
-  return(clean_corpus)
-}
-
-
-bigram_tokenizer <- function(x) unlist(lapply(ngrams(words(x), 2), paste, collapse = " "), use.names = FALSE)
-
-trigram_tokenizer <- function(x) unlist(lapply(ngrams(words(x), 3), paste, collapse = " "), use.names = FALSE)
-
-quadgram_tokenizer <- function(x) unlist(lapply(ngrams(words(x), 4), paste, collapse = " "), use.names = FALSE)
-
-ngram_tokenizer <- function(x,n) unlist(lapply(ngrams(words(x), n), paste, collapse = " "), use.names = FALSE)
-
-create_ngram <- function(a_corpus,tokenizer_function) {
-  dtm <- DocumentTermMatrix(a_corpus, control = list(tokenize = tokenizer_function))
-  
-  ngram <- tbl_df(data.frame(Words = dtm$dimnames$Terms, Frequency = colSums(as.matrix(dtm)))) %>% 
-    arrange(Words, desc(Frequency)) %>% 
-    mutate(Frequency = Frequency/sum(Frequency)) %>%
-    extract(Words,into = c("Input", "Predict"), '(.*)\\s+([^ ]+)$')
+  ngram <- tbl_df(data.frame(Words = dfm_corpus@Dimnames$features, Frequency = colSums(as.matrix(dfm_corpus)), stringsAsFactors = FALSE)) %>%
+     filter(Frequency > 4) %>%
+     arrange(Words, desc(Frequency)) %>%
+     mutate(Frequency = Frequency/sum(Frequency)) %>%
+     extract(Words,into = c("Input", "Predict"), '(.*)_([^ ]+)$') %>%
+     mutate(Input = stri_replace_all(Input, " ", regex = "_"))
   return(ngram)
 }
 
 #CSV implementation
 export_ngram <- function(ngram, destination) {
-
-
+  
+  
   filename <- paste(destination, CountWords(head(ngram)$Input[1]) + 1,"-gram.csv", sep ="")
-
+  
+  conn <- file(filename, "w")
   #write to file
   write.csv(ngram, file = filename, row.names = FALSE)
-
+  close(conn)
 }
-
-#JSON implementation
-# export_ngram <- function(ngram, destination) {
-#   library("jsonlite")
-#   
-#   json <- toJSON(ngram, digits = NA)
-#   validate(json)
-#   
-#   filename <- paste(destination, CountWords(head(ngram)$Input[1]) + 1,"-gram.json", sep ="")
-#   
-#   #write to file
-#   write(json, file = filename)
-#   
-# }
-
 
