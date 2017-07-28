@@ -9,34 +9,46 @@ source("helpers.R")
 
 main <- function() {
   
-  start_time <- Sys.time()
+  logconn <- file("data.log")
   
-  print(paste0("Time started: ", start_time))
+  start_time <- Sys.time()
+  log_message(logconn, "START")
+  
   #Well this stuff should go within the MakePredictMatrix function
   raw_data_location <- "../data/"
   corpus_data_location <- "../data/samples/"
   export_location <- "./"
-  
   ngram_indexes <- seq(2,6,1)
+  percentageOfData <- 0.001
   
-  create_sample_files(raw_data_location, fraction = 0.1)
+  log_message(logconn, "Percentage of data", percentageOfData)
+
+  create_sample_files(raw_data_location, fraction = percentageOfData)
+  log_message(logconn, "Sample files created")
+  
   a_corpus <- create_corpus(corpus_data_location)
-  
-  
-  #This should be a class of a list of Matricies...I wouldn't really know how to do that....especially dynamic assignment of memory sizing or depth. questions for another time.
-  
+  log_message(logconn, "Corpus Created")
 
   for(i in ngram_indexes) {
     ngram <- create_ngram(a_corpus, i)
     export_ngram(ngram, export_location)
+    log_message(logconn, "Created Ngram size:", i)
   }
   
+  
   end_time <- Sys.time()
-  print(paste0("Time ended: ", end_time))
-  print(paste0("Total time: ", difftime(end_time, start_time)))
+  log_message(logconn, "END")
+  log_message(logconn, "Total time: ", difftime(end_time, start_time))
+  
   
 }
 
+log_message <- function(conn, ...) {
+  arguments <- paste(list(...), collapse = " ")
+  message <- paste(Sys.time(), " -- ", arguments)
+  cat(message, file = conn)
+  print(message)
+}
 
 create_sample_files <- function(data_location, fraction = 0.001) {
 
@@ -121,7 +133,9 @@ create_ngram <- function(a_corpus, n_of_tokens) {
      arrange(Words, desc(Frequency)) %>%
      mutate(Frequency = Frequency/sum(Frequency)) %>%
      extract(Words,into = c("Input", "Predict"), '(.*)_([^ ]+)$') %>%
-     mutate(Input = stri_replace_all(Input, " ", regex = "_"))
+     mutate(Input = stri_replace_all(Input, " ", regex = "_")) %>%
+     group_by(Input) %>%
+     slice(1:3)
   return(ngram)
 }
 

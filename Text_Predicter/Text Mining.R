@@ -30,7 +30,12 @@ init_predictive_model_env <- function()
   quingram <- tbl_df(file.contents)
   close(conn)
   
-  return(list(quingram, quadgram, trigram, bigram))
+  conn <- file(paste(src_location, "6-gram.csv", sep = ""), "r")
+  file.contents <- read.csv(conn, stringsAsFactors = FALSE)
+  sexgram <- tbl_df(file.contents)
+  close(conn)
+  
+  return(list(sexgram, quingram, quadgram, trigram, bigram))
 }
 
 
@@ -40,43 +45,19 @@ predict_next_words <- function(list_of_words, predict_environment)
   #I should really bundle the corpus into a class and run predict off of that
   
   #select correct ngram
-  next_words <- predict_environment[[1]] %>%
-            filter(Input == list_of_words) %>% 
-            arrange(desc(Frequency)) %>%
-            top_n(n = 3) %>%
-            select(Predict) %>%
-            top_n(n = 3)    
+  
+  for(ngram in predict_environment) {
+    next_words <- ngram %>%
+              filter(Input == list_of_words) %>%
+              arrange(desc(Frequency)) %>%
+              top_n(n = 3) %>%
+              select(Predict) %>%
+              top_n(n = 3)
+    list_of_words <- gsub(".*? (.+)", "\\1", list_of_words)
+    if (dim(next_words)[1] != 0) break 
+  }
+  
 
-  if(dim(next_words)[1] == 0) {
-    list_of_words <- gsub(".*? (.+)", "\\1", list_of_words)
-    next_words <- predict_environment[[2]] %>%
-      filter(Input == list_of_words) %>% 
-      arrange(desc(Frequency)) %>%
-      top_n(n = 3) %>%
-      select(Predict) %>%
-      top_n(n = 3)   
-  }
-  
-  if(dim(next_words)[1] == 0) {
-    list_of_words <- gsub(".*? (.+)", "\\1", list_of_words)
-    next_words <- predict_environment[[3]] %>%
-      filter(Input == list_of_words) %>% 
-      arrange(desc(Frequency)) %>%
-      top_n(n = 3) %>%
-      select(Predict) %>%
-      top_n(n = 3) 
-  }
-  
-  if(dim(next_words)[1] == 0) {
-    list_of_words <- gsub(".*? (.+)", "\\1", list_of_words)
-    next_words <- predict_environment[[3]] %>%
-      filter(Input == list_of_words) %>% 
-      arrange(desc(Frequency)) %>%
-      top_n(n = 3) %>%
-      select(Predict) %>%
-      top_n(n = 3) 
-  }
-  
   return(list(next_words, list_of_words))
 }
 
