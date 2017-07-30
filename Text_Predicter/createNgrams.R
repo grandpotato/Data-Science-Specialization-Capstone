@@ -86,6 +86,30 @@ create_sample_files <- function(data_location, fraction = 0.001) {
   
 }
 
+read_corpus_files <- function(data_location, fraction = 0.01){
+  require(readr)
+sample_location <- paste0(data_location, "samples/joined_sampled.txt")
+  
+  if(file.exists(sample_location)) file.remove(sample_location)
+  
+  directory_source <- dir(data_location, ".*txt")
+  for (i in directory_source) {
+    full_path <- paste0(data_location, i)
+    
+    print(paste("Loading", full_path))
+    filebuffer <- read_lines(full_path)
+    
+    #make a sample
+    set.seed(3413)
+    number_of_lines <- length(filebuffer)
+    sample_size <- round(number_of_lines * fraction)
+    filebuffer <- filebuffer[sample(number_of_lines, sample_size)]
+
+    #write sample    
+    write_lines(filebuffer, sample_location, append = TRUE)
+  }
+}
+
 
 create_corpus <- function(data_location) {
   require(readtext)
@@ -138,6 +162,9 @@ create_ngram <- function(a_corpus, n_of_tokens) {
      slice(1:3)
   return(ngram)
 }
+
+
+
 
 #CSV implementation
 export_ngram <- function(ngram, destination) {
