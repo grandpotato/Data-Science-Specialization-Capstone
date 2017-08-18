@@ -7,49 +7,49 @@ library(stringr)
 library(RCurl)
 source("helpers.R")
 
-main <- function() {
+main <- function(percentageOfData = 0.01) {
   
-  logconn <- file("data.log")
-  
+  logfile <- "data.log"
   start_time <- Sys.time()
-  log_message(logconn, "START")
+  log_message(logfile, "START")
   
   #Well this stuff should go within the MakePredictMatrix function
   raw_data_location <- "../data/"
-  corpus_data_location <- "../data/samples/"
+  corpus_data_location <- "../data/joined_samples/"
   export_location <- "./"
   ngram_indexes <- seq(2,6,1)
-  percentageOfData <- 0.001
   
-  log_message(logconn, "Percentage of data", percentageOfData)
+  log_message(logfile, "Percentage of data", percentageOfData)
 
   create_sample_files(raw_data_location, fraction = percentageOfData)
-  log_message(logconn, "Sample files created")
+  read_corpus_files(raw_data_location, fraction = percentageOfData)
+  log_message(logfile, "Sample files created in ", corpus_data_location)
   
   a_corpus <- create_corpus(corpus_data_location)
-  log_message(logconn, "Corpus Created")
+  log_message(logfile, "Corpus Created")
 
   for(i in ngram_indexes) {
     ngram <- create_ngram(a_corpus, i)
     export_ngram(ngram, export_location)
-    log_message(logconn, "Created Ngram size:", i)
+    log_message(logfile, "Created Ngram size:", i)
   }
   
   
   end_time <- Sys.time()
-  log_message(logconn, "END")
-  log_message(logconn, "Total time: ", difftime(end_time, start_time))
-  
+  log_message(logfile, "END")
+  log_message(logfile, "Total time: ", format(difftime(end_time, start_time), units = "auto") )
   
 }
 
-log_message <- function(conn, ...) {
+log_message <- function(logfile, ...) {
   arguments <- paste(list(...), collapse = " ")
   message <- paste(Sys.time(), " -- ", arguments)
-  cat(message, file = conn)
+  write(message, file = logfile, append = TRUE)
   print(message)
 }
 
+
+#No longer used in this iteration
 create_sample_files <- function(data_location, fraction = 0.001) {
 
   directory_source <- dir(data_location, ".*txt")
@@ -86,9 +86,10 @@ create_sample_files <- function(data_location, fraction = 0.001) {
   
 }
 
+#reads in and creates the sample files all in one
 read_corpus_files <- function(data_location, fraction = 0.01){
   require(readr)
-sample_location <- paste0(data_location, "samples/joined_sampled.txt")
+sample_location <- paste0(data_location, "joined_samples/joined_sampled.txt")
   
   if(file.exists(sample_location)) file.remove(sample_location)
   
@@ -125,6 +126,10 @@ create_corpus <- function(data_location) {
 
 create_ngram <- function(a_corpus, n_of_tokens) {
   require(quanteda)
+  require(RCurl)
+  require(stringi)
+  require(stringr)
+  require(data.table)
   #variables
   profanity_location <- "https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/en"
   raw_profanity_list <- getURL(profanity_location)
@@ -140,7 +145,7 @@ create_ngram <- function(a_corpus, n_of_tokens) {
                          remove_twitter = TRUE,
                          remove_url = TRUE,
                          ngrams = n_of_tokens,
-                         concatenator = "_"
+                         concatenator = " "
   )
   
 
@@ -148,18 +153,17 @@ create_ngram <- function(a_corpus, n_of_tokens) {
   
   
   #write dfm to file
+  minThresh <- round((10 - n_of_tokens)/2, digits = 0)
   dfm_corpus <- dfm(tokenized_corpus, tolower = TRUE)
-  #dfm <- dfm_trim(dfm, min_count = 4)
+  dfm_corpus <- dfm_trim(dfm_corpus, min_count = minThresh)
   
+  rm(tokenized_corpus)
+  ngram <- data.table(Input = word(dfm_corpus@Dimnames$features,end = -2), 
+                      Predict = word(dfm_corpus@Dimnames$features, start = -1),
+                      Frequency = dfm_corpus@x)
   
-  ngram <- tbl_df(data.frame(Words = dfm_corpus@Dimnames$features, Frequency = colSums(as.matrix(dfm_corpus)), stringsAsFactors = FALSE)) %>%
-     filter(Frequency > 4) %>%
-     arrange(Words, desc(Frequency)) %>%
-     mutate(Frequency = Frequency/sum(Frequency)) %>%
-     extract(Words,into = c("Input", "Predict"), '(.*)_([^ ]+)$') %>%
-     mutate(Input = stri_replace_all(Input, " ", regex = "_")) %>%
-     group_by(Input) %>%
-     slice(1:3)
+  ngram <- ngram[,head(.SD, 1), by = Input]
+  
   return(ngram)
 }
 

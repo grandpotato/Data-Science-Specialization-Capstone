@@ -1,0 +1,11 @@
+name: Text_Predicter
+title: Text_Predicter
+account: grandpotato
+server: shinyapps.io
+appId: 204137
+bundleId: 937205
+url: https://grandpotato.shinyapps.io/Text_Predicter/
+when: 1502453265.61659
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|Text_Predicter_SlideDeck.Rmd|blah|createNgrams.R|data.log|profiling - createNgrams.R|profiling.R|testing - process efficiency -reporting.R|testing - process efficiency.R

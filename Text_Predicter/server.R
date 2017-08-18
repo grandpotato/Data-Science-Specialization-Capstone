@@ -2,11 +2,9 @@ library(shiny)
 library(stringi)
 library(stringr)
 source("Text Mining.R")
-print(paste0("start time:",Sys.time()))
 
 #how to I make a loading screen? So nothing starts until the following statement is complete?
 predictEnvironment <- init_predictive_model_env()
-print(paste0("environment ready time:",Sys.time()))
 
 
 shinyServer(function(input, output) {

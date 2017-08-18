@@ -1,1 +1,80 @@
-2017-07-29 03:10:37  --  Total time:  46.5702369213104
+2017-08-05 16:36:59  --  START
+2017-08-05 16:36:59  --  Percentage of data 0.01
+2017-08-05 16:37:14  --  Sample files created in  ../data/joined_samples/
+2017-08-05 16:37:15  --  Corpus Created
+2017-08-05 16:37:32  --  Created Ngram size: 2
+2017-08-05 16:37:54  --  Created Ngram size: 3
+2017-08-05 16:38:19  --  Created Ngram size: 4
+2017-08-05 16:38:48  --  Created Ngram size: 5
+2017-08-05 16:39:20  --  Created Ngram size: 6
+2017-08-05 16:39:20  --  END
+2017-08-05 16:39:20  --  Total time:  2.353064 mins
+2017-08-05 17:10:44  --  START
+2017-08-05 17:10:44  --  Percentage of data 0.05
+2017-08-05 17:11:03  --  Sample files created in  ../data/joined_samples/
+2017-08-05 17:11:14  --  Corpus Created
+2017-08-05 17:12:36  --  Created Ngram size: 2
+2017-08-05 17:15:07  --  Created Ngram size: 3
+2017-08-05 17:18:40  --  Created Ngram size: 4
+2017-08-05 17:22:22  --  Created Ngram size: 5
+2017-08-05 17:28:44  --  Created Ngram size: 6
+2017-08-05 17:28:44  --  END
+2017-08-05 17:28:44  --  Total time:  17.99063 mins
+2017-08-05 18:43:44  --  START
+2017-08-05 18:43:44  --  Percentage of data 0.1
+2017-08-05 18:44:05  --  Sample files created in  ../data/joined_samples/
+2017-08-05 18:44:18  --  Corpus Created
+2017-08-05 18:46:29  --  Created Ngram size: 2
+2017-08-05 18:51:30  --  Created Ngram size: 3
+2017-08-05 19:01:26  --  Created Ngram size: 4
+2017-08-05 19:34:41  --  Created Ngram size: 5
+2017-08-05 20:05:55  --  Created Ngram size: 6
+2017-08-05 20:05:55  --  END
+2017-08-05 20:05:55  --  Total time:  1.369852 hours
+2017-08-05 20:15:59  --  START
+2017-08-05 20:15:59  --  Percentage of data 0.01
+2017-08-05 20:16:46  --  Sample files created in  ../data/joined_samples/
+2017-08-05 20:16:49  --  Corpus Created
+2017-08-05 20:18:35  --  Created Ngram size: 2
+2017-08-05 20:19:27  --  Created Ngram size: 3
+2017-08-05 20:20:29  --  Created Ngram size: 4
+2017-08-05 20:22:31  --  Created Ngram size: 5
+2017-08-05 20:23:48  --  Created Ngram size: 6
+2017-08-05 20:23:48  --  END
+2017-08-05 20:23:48  --  Total time:  7.82354 mins
+2017-08-09 16:33:35  --  START
+2017-08-09 16:33:35  --  Percentage of data 0.01
+2017-08-09 16:33:55  --  Sample files created in  ../data/joined_samples/
+2017-08-09 16:33:57  --  Corpus Created
+2017-08-09 16:34:19  --  Created Ngram size: 2
+2017-08-09 16:34:46  --  Created Ngram size: 3
+2017-08-09 16:35:27  --  Created Ngram size: 4
+2017-08-09 16:36:41  --  Created Ngram size: 5
+2017-08-09 16:38:20  --  Created Ngram size: 6
+2017-08-09 16:38:20  --  END
+2017-08-09 16:38:20  --  Total time:  4.755937 mins
+2017-08-11 12:08:52  --  START
+2017-08-11 12:08:52  --  Percentage of data 0.01
+2017-08-11 12:09:12  --  Sample files created in  ../data/joined_samples/
+2017-08-11 12:09:14  --  Corpus Created
+2017-08-11 12:09:34  --  Created Ngram size: 2
+2017-08-11 12:10:01  --  Created Ngram size: 3
+2017-08-11 12:10:32  --  Created Ngram size: 4
+2017-08-11 12:11:02  --  Created Ngram size: 5
+2017-08-11 12:11:32  --  Created Ngram size: 6
+2017-08-11 12:11:32  --  END
+2017-08-11 12:11:32  --  Total time:  2.659067 mins
+2017-08-12 03:02:19  --  START
+2017-08-12 03:02:19  --  Percentage of data 0.2
+2017-08-12 03:04:58  --  START
+2017-08-12 03:04:58  --  Percentage of data 0.2
+2017-08-12 03:08:07  --  Sample files created in  ../data/joined_samples/
+2017-08-12 03:08:32  --  Corpus Created
+2017-08-12 03:13:19  --  Created Ngram size: 2
+2017-08-12 04:51:52  --  START
+2017-08-12 04:51:52  --  Percentage of data 0.1
+2017-08-12 04:54:54  --  Sample files created in  ../data/joined_samples/
+2017-08-12 04:55:12  --  Corpus Created
+2017-08-12 05:01:25  --  Created Ngram size: 2
+2017-08-12 05:11:44  --  Created Ngram size: 3
+2017-08-12 05:30:51  --  Created Ngram size: 4

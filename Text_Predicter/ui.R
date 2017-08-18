@@ -1,9 +1,8 @@
 
 library(shiny)
 library(shinydashboard)
-
-source("createNgrams.R")
 source("Text Mining.R")
+source("helpers.R")
 
 
 shinyUI(dashboardPage(
@@ -20,7 +19,7 @@ shinyUI(dashboardPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "predictor",
-              textInput("text", label = h3("Start Typing!")),
+              textInput(inputId = "text", label = h3("Start Typing!")),
               h3("Text matched on"),
               fluidRow(column(12, verbatimTextOutput("predict.status"))),
               h3("Predicted Text"),
