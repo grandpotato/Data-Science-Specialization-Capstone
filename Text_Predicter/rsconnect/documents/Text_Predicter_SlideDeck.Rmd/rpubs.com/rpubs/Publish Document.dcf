@@ -1,0 +1,8 @@
+name: Publish Document
+title:
+account: rpubs
+server: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/298718/3a4ae58ad440470280779e9ffa2e12d0
+bundleId: https://api.rpubs.com/api/v1/document/298718/3a4ae58ad440470280779e9ffa2e12d0
+url: http://rpubs.com/grandpotato/298718
+when: 1502454353.33628
